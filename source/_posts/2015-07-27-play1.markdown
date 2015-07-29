@@ -1,0 +1,211 @@
+---
+layout: post
+title: "给Java开发者的Play Framework(2.4)介绍 Part1：Play的优缺点以及适用场景"
+date: 2015-07-27 16:46:32 +0800
+comments: true
+categories: [Play Framework, Java, Scala]
+description: "对Java使用者介绍PlayFramework，Play的优缺点以及适用场景，学习Play的教程"
+---
+
+### 1. 关于这篇系列
+这篇系列不是Play框架的Hello World，因为这样的文章网上已经有很多。  
+
+这篇系列会首先结合实际代码介绍Play的特点以及适用场景，然后会有几篇文章介绍Play与Spring，JPA（Hibernate）的集成，以及一些Play应用的最佳实践，
+这期间会在Github上提供一个脚手架项目，方便感兴趣的朋友直接动手尝试。最后会简单分析Play的部分源码，帮助大家理解黑盒子的内部机制。  
+
+我水平有限，有错误欢迎指出。
+
+### 2. Play介绍
+Play Framework是一个开源的Web框架，背后商业公司是Typesafe。要介绍Play之前，首先理清Play的两个不同的分支。
+Play 1.x 使用Java开发，最新版本是1.3.1，只支持Java项目。从11年开始就进入了维护阶段，新项目一般不考虑使用Play1。
+Play 2.x 使用Scala和Java开发，同时支持Java和Scala项目。
+这里主要介绍最新的Play2.4 for Java。有一点需要提前说明，虽然Play2主要由Scala开发，但是对于项目中的一般开发人员而言，
+使用Play可以完全不懂Scala，具体情况后面会说明。
+
+### 3. 为什么要了解Play
+现在的Web框架或者类库可以说是浩如烟海。近十年来，在Web开发领域，JVM阵营的占有率一直不高，
+{% img /images/custom/20150728/frameworks.png %}
+数据来源(http://hotframeworks.com/#rankings)  
+这是国外开源项目的数据，相对来说国内Java框架的使用率会高一些。而最近几年，Ruby和Python在国内的开发群体也在不断壮大。
+Java框架在Web领域不那么受欢迎，主要原因在于开发速度远落后于其他的开发框架。对于初创公司而言，快速开发出产品投入市场试错比花半年打磨出一款功能性能齐备的
+应用更加重要，而对于成熟产品，也需要快速响应频繁的需求变化，这方面动态语言又更胜一筹。所以说到Web后端框架的技术选型，除非技术团队有比较深的JVM背景，
+否则会倾向于选择RoR，Django这些框架。  
+
+我认为开发速度慢主要有三个原因：编译的锅，技术栈的锅和语言的锅。  
+
+大家都知道Java源代码需要编译之后才能运行，直接结果是每次修改源代码都需要重启Web服务器才能看到效果。如果项目比较小类也少，重启时间还勉强能接受。
+我以前参与的一个项目，使用的是WebLogic服务器，Spring容器里大概有上千个Bean，重启一次至少得花5分钟，还是优化后的结果。工作时间至少有20%花在重启上了。
+虽然现在有JRebel之类的热加载技术，但是国内使用的相对较少。  
+
+Servlet规范在1997年出现，在当时可以说是很先进的技术，加上Tomcat的横空出世，直接促成了JSP的崛起。然而时过境迁，Servlet风光不再，
+Web容器存在的必要性也[被越来越多的人质疑](https://jaxenter.com/java-application-servers-dead-112186.html)。原因就在于人为的将应用与容器剥离，
+虽然这种做法本意是好的，但是结果就是给开发测试部署带来一系列集成的问题，现在越来越多的项目开始使用内嵌的Jetty或Tomcat就是一个现实的例子。
+Servlet还带来一个问题，就是有状态的服务器。一旦使用了Session，服务器就无法享受到水平扩展的好处了，由此不得不采用Session复制或者粘性Session(Sticky Session)的
+方案来解决这个问题，无论采取哪种方案都会有性能损耗，并且推高了技术成本。Servlet说到底是Java EE家族的一员，由于Sun的领导（Oracle背锅），
+从Java EE 5开始，Java EE的角色已经从技术创新者转换为跟随者，这些年基本上可以说是跟着开源社区的步子在走的，除了政府大单和跨国企业，你很难再看见它的身影了。  
+
+至于语言，其实从JDK8开始，Java已经很好用了。不过从JDK5到JDK8，十年太长，尤其是在Web。
+
+近几年JVM领域也出现了一些相当优秀的框架，如[Dropwizard](http://www.dropwizard.io)，[Play](https://playframework.com)，[Vert.x](http://vertx.io/)。
+这篇系列要介绍的Play，通过ClassLoader在源代码修改的时候动态加载类，解决了修改代码需要重启服务器的问题，完全抛弃了Servlet技术栈，基于Netty实现了自己的
+请求响应接口（Request/Result），基于Play的应用就是无状态的，另外Play处理Request的方式是无阻塞的（Non-Blocking）。Play2在设计的时候借鉴了RoR的许多优点，
+学习Play能够让你了解一些现代化框架的特点，同时能够为你打开异步编程世界的大门。Promise已经被Scala，JavaScript等语言大量使用，Actor模型也已经遍地开花，
+你可以直接在Play中使用它们，或者你想保持原来的编程风格也完全没有问题。
+
+### 4. Play的特性
+#### 1. Play2的模板引擎
+Play2的模板是很强大并且容易上手的. 相对于Java领域其他模板引擎(Freemarker, Velocity, JSP, Groovy, etc), 主要有三个特点.  
+1) 简单易上手, 没有JSP里面繁杂的内置对象和指令, 所有功能都通过方法调用完成.  
+2) 主流IDE中都支持Play模板的静态类型检查, 类似JSP.  
+3) 支持反向路由.  
+举个例子, 一般系统都会有一个固定的页面布局, 比如分出页头页尾。如果用JSP或者Velocity之类的模板，
+一般都是通过sitemesh+filter或者在每个页面include来完成布局。使用Play模板, 完成这个功能非常容易。
+首先定义一个main页面
+main.scala.html：
+```html
+@(title: String = "默认标题")(staticFile: Html = Html(""))(content: Html)
+
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8" />
+    <title>@title</title>
+
+
+</head>
+
+<body>
+
+@header()  <-- 页头 -->
+
+@navigator() <!-- 导航 -->
+
+@content
+
+<script src="@routes.Assets.versioned("js/jquery-1.11.2.min.js")"></script>
+
+@staticFile
+```
+
+```
+@(title: String = "默认标题")(staticFile: Html = Html(""))(content: Html)
+```
+这一部分是参数声明，这里声明了三个参数:title标题, 有默认值；staticFile为html代码块, 可以传js等；content为页面内容。
+
+```
+@header()  <-- 页头 -->
+
+@navigator() <!-- 导航 -->
+```
+这一部分是引用同目录下的另外两个页面：header.scala.html和navigator.scala.html。为什么能这样引用，因为这些页面(main,header,navigator)都会被自动
+编译成一个方法（准确地说是一个Scala object，不过这里先当做方法），所以这里相当于方法调用。同样，这个main也会被编译成方法，其他页面可以调用main来完成布局，
+例如
+login.scala.html
+```html
+@main() {
+    <script type="text/javascript">
+        FG.user.login();
+    </script>
+} {
+    <div class="login width1200">
+    <!-- login -->
+    </div>
+}
+```
+这就是一个简单的登录页面。登录页面调用main页面的方法，第一个参数不传使用默认标题，第二个参数传入登录页面的js代码，第三个参数传入登录页面的html代码。
+这样就完成了页面布局, 没有随处可见的include, 也没有暗箱操作的filter, 所有的一切都是方法调用, 是不是很简单清晰？  
+
+静态类型检查就不说了, 本来Java的一大优点(Que Dian)就是类型检查，所以在Java里用Freemarker或者Velocity这种模板的做法值得商榷。  
+
+反向路由的意思是, 在Play中, 所有的Controller url都配置在一个routes文件中, 例如
+```
+GET         /register                           @controllers.user.LoginController.registerPage
+```
+之后无论是在Controller里还是模板中, 都不用硬编码url。而是使用routes文件。例如在Controller中使用``` redirect(routes.LoginController.registerPage()) ```就能实现重定向。
+而在模板中使用 ``` <a href="@controllers.routes.LoginController.registerPage()"> ```来指向链接。这种风格就是REST里的URI模板。
+
+#### 2. 热部署
+这个上面介绍过，不用重启服务器。
+
+#### 3. 内置dev/prod环境，内置部署脚本
+平常开发的时候使用run启动Play，是跑在dev模式。 Play会定时扫描源码目录进行热更新，并且类都是访问的时候再加载，提高启动速度。
+使用start启动项目就运行在prod模式。Play内置dist命令，可以把所有的文件打包成一个zip，解压之后直接运行bin目录下的可执行文件即可启动项目，除了JDK之外无须任何其他外部依赖。
+这大大减轻了运维成本，同时也能够很方便的进行持续集成（CI）。
+
+#### 4. 使用Play开发的Server大部分能做到Stateless
+这个之前也说过，Play抛弃了Servlet/JSP里Session等概念, 内置没有提供方法将对象与服务器实例进行绑定(你要使用HashMap存的话Play也没办法)。
+推荐的做法是使用外部缓存, 比如Redis, Memcached等。可能有人会觉得没有Session是Play的一个缺点（Play里的Session和Servlet Session不是一回事）,
+但是只要你开发过流量大一点的应用, 你就会理解这点。
+
+#### 5. 好用的配置库
+如果你之前开发过Java项目, 肯定写过**.properties或者管理过一大堆的xml。Java内置库对properties文件的处理是很弱的，你不得不自己写一些工具类去进行处理，
+而且properties文件还不支持更复杂的语法。Play使用[Typesafe Config](https://github.com/typesafehub/config)库，配置文件使用HOCON格式，默认配置文件为application.conf。
+你能很容易读取里面的配置, 并且你也可以把自己的配置写在里面。所以项目中基本不需要使用properties或者xml文件了，除了第三方库需要的。
+
+#### 6. Play插件
+RoR框架之所以好用，主要原因之一就是围绕RoR有相当丰富的插件可供选择，很多业务功能甚至都不需要开发就能实现。Play的插件数量当然相对于RoR还是要少一些，
+不过你遇到的需求基本都有现成的插件可以使用。比如发邮件, 授权和验证, sitemap生成，第三方登录等等。自己写一个插件也很简单。
+
+#### 7. 优秀的测试支持
+因为Play诞生的时候TDD已经很火热，所以Play对测试的支持非常好。
+通过Helpers.fakeApplication()一行代码就能模拟出一个Application(Play中的Application你可以理解为类似于Spring的Context)。
+```Java
+Http.RequestBuilder request = new Http.RequestBuilder().method(POST).uri(routes.LoginController.requestPhoneCode(phone).url());
+Result result = route(request);
+assertThat(result.status(), is(OK));
+```
+三行代码就能对Controller进行测试。如果要测试完整的Http请求，可以通过fakeServer在测试中启动一个Play应用，通过请求这个Play应用来完成测试。
+Play还内置了对 Selenium WebDriver的支持，可以模拟浏览器进行测试。以下是官方的例子：
+```Java
+public class BrowserFunctionalTest extends WithBrowser {
+
+    @Test
+    public void runInBrowser() {
+        browser.goTo("/");
+        assertNotNull(browser.$("title").getText());
+    }
+
+}
+```
+
+#### 8. 优秀的REST支持
+Play2从诞生起就能很容易的支持RESTful风格的架构（因为Play2在设计的时候REST就已经大行其道），
+在Play2中实现RESTful API的示例可以参考Stackoverflow上的这个[回答](http://stackoverflow.com/questions/4379485/restful-on-play-framework)
+
+### 5. 使用Play过程中遇到的坑
+#### 1. 首次编译速度过慢
+这是Scala的锅。Scala在编译过程中要[经历至少30个步骤](http://stackoverflow.com/questions/4527902/what-is-the-order-of-the-scala-compiler-phases)，
+导致编译速度相当慢。在我的机器上（Core(TM) i5-4590 CPU @ 3.30GHz，RAM 8GB），编译100多个Scala类大约需要1到2分钟。好在sbt可以增量编译，
+即首次编译之后，你再修改代码，编译器只会编译那些它认为需要编译的类，编译几个类的时候速度很快，基本刷新页面就能完成。
+
+#### 2. IDE的Scala插件偶尔会误报错误
+首先得说明，最适合开发Play项目的IDE是[IntelliJ IDEA](https://www.jetbrains.com/idea)。现在IDEA最新的Scala插件相比之前的版本，已经有很大的提升。
+不过偶尔还是会出现误报的情况，这个问题随着新版本插件的发布应该会慢慢解决。
+
+#### 3. Scala和Sbt的学习成本较高
+这可能是初次接触Play的用户遇到的最大障碍。其实对于大多数业务开发人员来说，这不是问题。使用Play for Java版本，项目代码99%都是Java代码，
+而Sbt类似于Maven，一旦项目搭建好后不需要过多接触，只要学会几个常用的命令就可以了，例如project root(切换项目), run(启动服务器在dev模式)。
+我们团队大部分成员之前都没有接触过Scala和Play，经过一两周的磨合期之后都能很顺利的使用Play进行开发了。
+
+#### 4. Play的API变化速度比较快
+Play的版本号遵循[Semantic Versioning](http://semver.org/)，不同主版本的API变化非常大，比如Play1和Play2就是两个不同的框架。
+而副版本之间API也会有一些变化，而且不一定完全向后兼容。例如使用Play2.3.x的项目在升级到2.4的时候，需要按照官方提供的迁移手册进行代码修改，
+不然是运行不了的。这对于其他背景的开发者来说可能比较容易理解，但是如果是一直习惯于使用Spring MVC或Struts2的话，可能会对这点感到不适。
+
+### 6.总结
+Play2可以算是一个现代化的框架，吸收了RoR诸多优点，同时又解决了Java开发中的一些痛点，在国外已经被大量使用。参见
+{% img /images/custom/20150728/playframework2.png %}
+数据来源(http://www.infoq.com/research/jvm-web-frameworks)  
+
+Play和Spring MVC的定位有些相似，但是比Spring MVC提供更丰富的功能，和Web有关的项目都可以使用Play。但是如果要用好Play，对团队有一定的要求。  
+
+首先，你的团队应该不是墨守成规的团队。大部分人都害怕变化，这是不争的事实。JDK的发展缓慢加上国内的技术氛围，着实让Java开发人员过了几年的舒服日子。
+你如果是05年学会了ibatis和Spring，然后这十年去环游世界了，在15年你照样能轻松找到一份待遇还算可以的工作。然而事情已经开始发生变化，不会学习可能会被淘汰。  
+
+其次，你的团队应该重视工作效率和质量，并且有时间做出改进。国内很多团队信奉的是人海战术。以低薪聘请大量不合格的开发人员来开发业务功能，
+而不是注重单人的工作效率和质量，很多项目的加班和延期都源于此。这样的团队就不适合用Play。很难想象每天都要加班去应付工作的团队有时间打磨升级自己的工具和技能。
+但是反过来低效率的工具和技能又拖累了自己的工作效率，这是一个恶性循环。  
+
+最后，团队中需要有人对Scala和Sbt有一定的了解。虽然Play有Java版本可以使用，但是如果不会Scala和Sbt，在搭建环境，使用一些高级功能（如Filter）的时候可能会遇到麻烦。  
+
+下篇我会介绍Play和Spring还有JPA（Hibernate）的集成，毕竟Spring在大部分Java项目还是主流。有问题和建议欢迎指出。
