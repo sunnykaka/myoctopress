@@ -31,7 +31,7 @@ Java框架在Web领域不那么受欢迎，主要原因在于开发速度远落�
 应用更加重要，而对于成熟产品，也需要快速响应频繁的需求变化，这方面动态语言又更胜一筹。所以说到Web后端框架的技术选型，除非技术团队有比较深的JVM背景，
 否则会倾向于选择RoR，Django这些框架。  
 
-我认为开发速度慢主要有三个原因：编译的锅，技术栈的锅和语言的锅。  
+JVM阵营在Web领域逐渐落后主要有三个原因：编译的锅，技术栈的锅和语言的锅。  
 
 大家都知道Java源代码需要编译之后才能运行，直接结果是每次修改源代码都需要重启Web服务器才能看到效果。如果项目比较小类也少，重启时间还勉强能接受。
 我以前参与的一个项目，使用的是WebLogic服务器，Spring容器里大概有上千个Bean，重启一次至少得花5分钟，还是优化后的结果。工作时间至少有20%花在重启上了。
@@ -42,15 +42,16 @@ Web容器存在的必要性也[被越来越多的人质疑](https://jaxenter.com
 虽然这种做法本意是好的，但是结果就是给开发测试部署带来一系列集成的问题，现在越来越多的项目开始使用内嵌的Jetty或Tomcat就是一个现实的例子。
 Servlet还带来一个问题，就是有状态的服务器。一旦使用了Session，服务器就无法享受到水平扩展的好处了，由此不得不采用Session复制或者粘性Session(Sticky Session)的
 方案来解决这个问题，无论采取哪种方案都会有性能损耗，并且推高了技术成本。Servlet说到底是Java EE家族的一员，由于Sun的领导（Oracle背锅），
-从Java EE 5开始，Java EE的角色已经从技术创新者转换为跟随者，这些年基本上可以说是跟着开源社区的步子在走的，除了政府大单和跨国企业，你很难再看见它的身影了。  
+从Java EE 5开始，Java EE的角色已经从技术创新者转换为跟随者，这些年基本上可以说是跟着开源社区的步子在走的，除了政府大单和跨国企业，你很难再看见它的身影了。
 
 至于语言，其实从JDK8开始，Java已经很好用了。不过从JDK5到JDK8，十年太长，尤其是在Web。
 
-近几年JVM领域也出现了一些相当优秀的框架，如[Dropwizard](http://www.dropwizard.io)，[Play](https://playframework.com)，[Vert.x](http://vertx.io/)。
+之前Java阵营受累于没有成熟的快速开发框架，Spring热衷于提供各种集成方案，可是配置和使用还是相当的麻烦，直到Spring Boot的出现才有改善。
+不过近几年出现了一些相当优秀的框架，如[Dropwizard](http://www.dropwizard.io)，[Play](https://playframework.com)，[Vert.x](http://vertx.io/)。
 这篇系列要介绍的Play，通过ClassLoader在源代码修改的时候动态加载类，解决了修改代码需要重启服务器的问题，完全抛弃了Servlet技术栈，基于Netty实现了自己的
-请求响应接口（Request/Result），基于Play的应用就是无状态的，另外Play处理Request的方式是无阻塞的（Non-Blocking）。Play2在设计的时候借鉴了RoR的许多优点，
+请求响应接口（Request/Result），基于Play的应用就是无状态的，另外Play处理请求的方式是无阻塞的（Non-Blocking）。Play2在设计的时候借鉴了RoR的许多优点，
 学习Play能够让你了解一些现代化框架的特点，同时能够为你打开异步编程世界的大门。Promise已经被Scala，JavaScript等语言大量使用，Actor模型也已经遍地开花，
-你可以直接在Play中使用它们，或者你想保持原来的编程风格也完全没有问题。
+这些你都可以直接在Play中使用，或者你想保持原来的编程风格也完全没有问题。
 
 ### 4. Play的特性
 #### 1. Play2的模板引擎
@@ -148,13 +149,12 @@ RoR框架之所以好用，主要原因之一就是围绕RoR有相当丰富的�
 
 #### 7. 优秀的测试支持
 因为Play诞生的时候TDD已经很火热，所以Play对测试的支持非常好。
-通过Helpers.fakeApplication()一行代码就能模拟出一个Application(Play中的Application你可以理解为类似于Spring的Context)。
+例如下面的几行代码就能对Controller进行测试。
 ```Java
 Http.RequestBuilder request = new Http.RequestBuilder().method(POST).uri(routes.LoginController.requestPhoneCode(phone).url());
 Result result = route(request);
 assertThat(result.status(), is(OK));
 ```
-三行代码就能对Controller进行测试。如果要测试完整的Http请求，可以通过fakeServer在测试中启动一个Play应用，通过请求这个Play应用来完成测试。
 Play还内置了对 Selenium WebDriver的支持，可以模拟浏览器进行测试。以下是官方的例子：
 ```Java
 public class BrowserFunctionalTest extends WithBrowser {
