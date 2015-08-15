@@ -31,6 +31,8 @@ description: "StatsD, Graphite, Grafana, Kamon的介绍"
 - OS Metrics一看就知道是操作系统的统计图表了。  
 - JVM Metrics是JVM的统计图表。  
 
+<!-- more -->
+
 ### 3. StatsD, Graphite, Grafana, Kamon简介
 简单介绍一下这四个开源项目，因为都在Github上就不贴链接了，  
 已经对这几个项目很熟悉的可以略过。
