@@ -8,7 +8,7 @@ description: "对Java使用者介绍PlayFramework，Play的用法，学习Play�
 ---
 
 ### 1. 介绍
-这篇文章会使用Play，Spring，JPA（hibernate）开发一个简单的CRUD功能，主要是为了介绍如何使用Play进行开发，如果对Play已经很熟悉了的朋友可以略过。
+这篇文章会使用Play，Spring，JPA（hibernate）开发一个简单的CRUD功能，主要是为了介绍如何使用Play进行开发。
 
 ### 2. 界面截图
 {% img /images/custom/20150818/play2_1.png %}
@@ -177,7 +177,7 @@ public class GeneralDao {
 这里使用的是通用Dao，一般的增删改查操作可以直接通过该Dao完成。可以看出这个Dao只是对JPA的EntityManager一个简单封装，
 大部分操作还是委派给EntityManager完成。代码中也可以直接取得EntityManager进行操作。
 
-<!-- more --> 
+<!-- more -->
 
 #### 3. Service
 
@@ -438,3 +438,5 @@ Play的模板引擎是[Twirl](https://github.com/playframework/twirl)，关于�
 
 除此之外，感兴趣的朋友还可以下载[Typesafe Reactive Platform](http://www.typesafe.com/get-started)进行学习。这这上面有很多关于Play，Akka的项目模板，
 并且你可以通过浏览器查看编辑这些代码，还可以直接运行。另外要进一步学习可以读[这本书](http://www.amazon.com/Play-Java-Covers-2/dp/1617290904)，网上有电子版的。
+
+下篇我会介绍如何搭建开发环境，以及如何调试应用。掌握了之后，你会发现开发和调试过程原来还能这样直观和简单!
