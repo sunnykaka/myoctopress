@@ -4,7 +4,7 @@ title: "给Java开发者的Play Framework(2.4)介绍 Part2：使用Play，Spring
 date: 2015-08-17 20:19:50 +0800
 comments: true
 categories: [Play Framework, Java, Scala]
-description: "对Java使用者介绍PlayFramework，Play的用法，学习Play的教程"
+description: "对Java使用者介绍PlayFramework，Play的用法"
 ---
 
 ### 1. 介绍
@@ -433,7 +433,8 @@ Play的模板引擎是[Twirl](https://github.com/playframework/twirl)，关于�
 但是我们能很快享受到Play的便利：简单易用的模板，修改代码无需重启服务器，不需要配置外部服务器，etc。随着业务和技术的扩展，使用Play的项目更容易整合其他服务。
 例如整合监控工具[StatsD+Graphite+Grafana+Kamon](http://skaka.me/blog/2015/07/21/kamon-statsd-graphite-grafana-introduction/)，Docker化，服务化。  
 
-这篇文章我没有介绍如何启动应用，因为这需要一些开发环境的准备，以及了解SBT的基本用法。这些内容我会在下一篇博客介绍。这篇文章相关的代码已经提交到Github，[项目地址](TODO)。
+这篇文章我没有介绍如何启动应用，因为这需要一些开发环境的准备，以及了解SBT的基本用法。这些内容我会在下一篇博客介绍。这篇文章相关的代码已经提交到Github，
+[项目地址](https://github.com/sunnykaka/awesome-play)。
 这个项目整合了Play，Spring，JPA，数据存储使用MySQL和Redis，使用Bootstrap作为页面框架，可以作为脚手架项目给有兴趣的朋友进行研究。  
 
 除此之外，感兴趣的朋友还可以下载[Typesafe Reactive Platform](http://www.typesafe.com/get-started)进行学习。这这上面有很多关于Play，Akka的项目模板，
