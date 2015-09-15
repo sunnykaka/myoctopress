@@ -1,0 +1,161 @@
+---
+layout: post
+title: "给Java开发者的Play Framework(2.4)介绍 Part3：搭建Play的开发环境"
+date: 2015-09-13 10:22:10 +0800
+comments: true
+categories: [Play Framework, Java, Scala, sbt]
+description: "对Java使用者介绍PlayFramework，Play的用法"
+---
+
+### 1. 开始前的准备
+这篇文章会介绍Play项目开发环境的搭建，以及日常开发的常用命令。进行之前，首先得准备下面的工具：
+
+1.JDK8+  
+2.[Scala 2.11.6+](http://www.scala-lang.org/)  
+3.[sbt 0.13.7+](http://www.scala-sbt.org/)  
+4.[IntelliJ IDEA 14+](https://www.jetbrains.com/idea/)  
+5.[MySQL 5.5+](http://www.mysql.com/) 或 [MariaDB 10+](https://mariadb.org/)
+6.[Redis 2.7+](http://redis.io/)
+7.科学上网工具  
+
+这些软件安装都可以参照官方的文档，这里就不介绍了。  
+
+推荐使用的IDE是IntelliJ IDEA，如果对Eclipse有执念的也可以考虑用Typesafe维护的[ScalaIDE](http://scala-ide.org/)。  
+但是在目前看来，IDEA对Scala的支持最好，另外IDEA相比Eclipse也有很多优点，没有尝试过的朋友可以试一下，保证你不会想切回Eclipse了：）  
+
+MySQL和Redis是这篇文章的demo项目启动需要的，如果不打算运行项目可以忽略。  
+
+另外科学上网工具也是需要的, demo项目的一些包需要连接Google Code仓库获取，而且没有科学上网的话下载速度会奇慢无比，相信我，你没有那么多时间用来浪费的。
+
+### 2. 搭建开发环境
+我的操作系统是Ubuntu 14.04，所以下面涉及到命令或文件路径地方，可能都是Linux风格的。如果你的操作系统是Windows或OS X，需要做相应替换。
+
+#### 1. 安装IDEA插件
+打开IDEA之后的第一件事就是要安装Scala插件，这个插件包含了对Scala, sbt, Play的支持。
+插件安装方法是点击左上角的Files->Settings->在弹出框的左上角输入plugins->点击弹出框底部靠中间位置的Install Jetbrains Plugins->输入Scala->点击Install。
+然后等待下载结束重启即可。注意如果没有翻墙的话下载速度会很慢。
+
+#### 2. 从Github签出Demo项目
+之前我在Github上创建了一个使用了Play，Spring，JPA的[脚手架项目](https://github.com/sunnykaka/awesome-play)，这个项目数据存储使用MySQL和Redis，
+使用Bootstrap作为页面框架。我们之后的操作都以这个项目为基础。现在先从Github把项目拿下来，直接使用IDEA的Checkout From Github即可，等待下载完成。下载完成之后，
+如果之前的Scala插件安装成功，应该会出现下面这个界面：
+{% img /images/custom/20150914/play3_1.png %}
+这里选中sbt，然后点击next，选择合适的路径和JDK8，点击完成即可。之后就是等待IDEA导入项目并且下载依赖就行了。再次提示，需要准备梯子。
+
+#### 3. 项目结构
+{% img /images/custom/20150914/play3_2.png %}
+
+- admin：web模块，这个模块是一个标准的Play项目
+- common：公共模块，存放一些工具类，公用的实体类和服务类  
+- order-center：领域模块，订单中心。系统可以按照限界上下文拆分出来多个领域模块  
+
+这里演示了sbt多模块项目的使用。我们在划分模块的时候，按照DDD的思想，每一个确定的限界上下文划分为一个领域模块，领域层和服务层的代码都放在领域模块中。
+领域模块之间会有依赖关系，而具体的应用会依赖这些领域模块。比如admin是一个Play应用，用来实现管理界面，会依赖order-center这个领域模块。以后如果需要构建其他应用，
+比如需要对外提供API服务，只需要再增加一个web模块并且引用需要的领域模块就可以了。这种架构在一定程度上可以减少大泥球带来的维护困难，因此比较适合没有复杂到需要划分
+微服务的项目采用。  
+
+- project：sbt构建目录  
+
+sbt在构建项目的时候会依赖这个目录下面的文件。现在不需要做太多了解，只需要知道这个目录的作用类似于maven的pom.xml即可。  
+
+- admin/app：存放源代码，这个项目中app目录下主要存放Controller代码  
+- admin/conf：存放项目配置文件  
+- admin/public：存放静态资源，比如js和css，图片  
+- admin/test：存放测试代码  
+
+admin项目结构是一个标准是Play项目结构，因为我们把领域层和服务层的代码都放在了领域模块，所以这个模块中基本上只有展现层的代码，即Controller。
+
+#### 4. 修改配置与初始化数据库
+这个项目用到了MySQL数据库，所以我们需要初始化数据库，数据库初始化文件位置是docs/test-object.sql。进入MySQL终端（或者你喜欢的MySQL客户端工具），输入下面命令：
+```
+drop database play;
+create database play;
+source /path/to/docs/test-object.sql -- 换成你自己的路径
+```
+
+接下来需要修改项目配置，将MySQL连接信息替换成你自己的。打开admin/conf/application.conf，替换下面的配置：
+```
+db.default {
+  driver = com.mysql.jdbc.Driver
+  url = "jdbc:mysql://localhost:3306/play?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull"
+  username = root
+  password = "root"
+
+...
+
+redis {
+  host = 127.0.0.1
+  port = 6379
+
+...
+
+```
+
+#### 5. 项目启动
+好了，废话了这么多，现在我们要来启动我们的第一个Play应用了！  
+打开命令行，你可以使用操作系统默认的命令行工具或者IDEA的terminal，更好的选择是Ubuntu的Guake或OS X的iTerm2。首先切换到当前项目所在目录，然后输入下面的命令：
+```
+sbt
+project admin
+run
+```
+如果一切顺利，你在命令行将看到下面的结果：
+{% img /images/custom/20150914/play3_3.png %}
+
+解释每个命令：  
+**sbt**：在项目目录下使用这个命令，sbt会读取项目的配置（主要是项目下的project文件夹和build.sbt文件），然后进入sbt交互模式，之后的命令都是在sbt交互模式下输入的。  
+**project admin**：切换到admin子项目。这是一个多模块项目，在sbt中，使用"project 模块名"来切换到对应的模块。  
+**run**：Play项目启动有两种模式，开发模式启动(run)和生产模式启动(start)。启动的时候可以指定端口，比如run 9001，默认端口为9000。  
+
+现在我们可以打开浏览器访问了。访问[http://localhost:9000/](http://localhost:9000/)，看到下面的界面就代表启动成功了。
+{% img /images/custom/20150914/play3_4.png %}
+
+如果访问不了，请查看之前的步骤是否都正确完成。这里要注意，第一次访问页面的时候会很慢，这时你观察命令行可能会看见代码正在进行编译，或者正在打出大量的log。
+出现这种情况是因为如果通过run启动（开发模式），启动的时候并不会真正启动应用，而只是监听端口，当发现有第一个请求过来的时候，才会编译业务代码，开始处理流程。
+
+如果你坚持做到这里，恭喜你，你已经准备好了开发环境。接下来我会介绍一些开发和运维过程中会经常使用的命令。
+
+#### 6. 对项目进行Debug
+如果你之前一直都使用IDE启动项目，你可能会觉得奇怪，为什么要在命令行用sbt启动项目。这是因为IDEA的Scala插件还不能支持多模块项目的Play应用启动，而且通过命令行的方式
+也让我们能够对项目的启动有更多控制，比如Debug。因为我们是在命令行通过sbt启动的项目，所以需要用到Java的远程调试功能，即JDWP。我们会在IDEA中启动调试器，
+连接被调试的sbt进程。我们首先需要为sbt设置启动参数，如果你的机器是Linux或OS X，可以在~/.bashrc中加入下面的环境变量（Windows可以右键我的电脑添加环境变量）：
+```
+export SBT_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=9999"
+```
+这样sbt每次启动的时候都会监听调试端口9999。这里要注意，加了这个配置后，你不能同时启动多个sbt进程，因为端口会发生冲突。如果需要同时启动多个sbt进程，
+就不能加到环境变量里，而是在每次启动的时候指定SBT_OPTS参数。  
+
+修改~/.bashrc之后，打开一个新的命令行，启动sbt，你会发现sbt在启动之后会输出一行
+{% img /images/custom/20150914/play3_5.png %}
+
+这样就代表配置成功了。  
+
+然后就是在IDEA中启动远程调试，这和远程调试其他Java应用并无不同。在IDEA中点击菜单中的Run->Edit Configurations，在弹出框中点击左上角的“+”号，选择Remote，
+在port中输入9999，输入一个你喜欢的名字，点击OK就行了。然后如下图，点击Debug按钮启动就可以了。
+{% img /images/custom/20150914/play3_6.png %}
+
+现在应用可以正确的在断点处停下来。
+
+#### 7. 部署应用
+现在，我们要谈谈项目部署。以往的Java Web项目在部署的时候一般是需要将打好的war包放入指定目录，然后让应用服务器例如Tomcat在启动的时候加载，比较好的方式是内嵌的应用服务器，
+例如Jetty等，不过还是少不了一大堆配置。现在会简单很多。之前在sbt下，我们使用过run命令来启动应用，现在可以用dist命令来打包应用。进入项目所在目录，用下面的命令完成打包：
+```
+sbt ";clean ;project admin ;test ;dist"
+```
+这里是多条命令放在一起执行，注意其中的test会执行该模块测试目录下所有的测试代码，如果不想在打包前运行测试可以把";test"去掉。
+打包成功之后的目标文件路径是admin/target/universal/admin-1.0.0-SNAPSHOT.zip，直接将这个zip包拷贝到部署服务器就可以了。假设这个压缩包解压之后的路径是%PATH%，
+那么运行%PATH%/bin/admin就能够在生产模式下启动应用了。部署服务器只需要准备JDK环境。  
+
+在启动脚本的时候可以指定一些额外参数，例如
+```
+/home/admin/shop/bin/shop -J-server -J-Xms2048M -J-Xmx2048M -Dhttp.port=9001 -Dconfig.file=conf/env/test.conf -Dlogger.file=conf/env/test_logger.xml
+```
+通过-Dconfig.file和-Dlogger.file可以让你在生产环境和测试环境指定不同的配置文件，这会非常有用。
+
+#### 8. 总结
+这篇文章我介绍了从零开始搭建一个Play开发环境的过程，大家可以看见使用Play框架的一些优点：配置少，开发调试步骤简单，运维友好。但是也引入了一些复杂性：sbt构建工具，
+Scala环境。好在只要项目架构搭建好，这些复杂性可以隐藏起来。但是我相信对一个有追求的程序员来说，永远有对新技术和新知识的渴望。下面的链接可供参考：  
+[The Ultimate Guide to Getting Started with the Play Framework](http://www.ybrikman.com/writing/2014/03/10/the-ultimate-guide-to-getting-started/)  
+[Scala指南](http://zh.scala-tour.com/)  
+[快速了解Scala技术栈](http://www.infoq.com/cn/articles/scala-technology)  
+[使用SBT构建Scala应用](https://github.com/CSUG/real_world_scala/blob/master/02_sbt.markdown)  
