@@ -14,8 +14,8 @@ description: "对Java使用者介绍PlayFramework，Play的用法"
 2.[Scala 2.11.6+](http://www.scala-lang.org/)  
 3.[sbt 0.13.7+](http://www.scala-sbt.org/)  
 4.[IntelliJ IDEA 14+](https://www.jetbrains.com/idea/)  
-5.[MySQL 5.5+](http://www.mysql.com/) 或 [MariaDB 10+](https://mariadb.org/)
-6.[Redis 2.7+](http://redis.io/)
+5.[MySQL 5.5+](http://www.mysql.com/) 或 [MariaDB 10+](https://mariadb.org/)  
+6.[Redis 2.7+](http://redis.io/)  
 7.科学上网工具  
 
 这些软件安装都可以参照官方的文档，这里就不介绍了。  
