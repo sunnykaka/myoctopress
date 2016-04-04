@@ -43,25 +43,30 @@ responseFuture.onFailure(func(e -> {
 }));
 ```
 我在`responseFuture`上注册了一个成功的回调函数和失败的回调函数, 当Future对应的操作完成时, 会简单的打印出结果或异常信息.
-Future另外一个十分强大的用法是组合.例如下面的Scala代码:
-```scala
-val authenticatedUser: Future[User] =
-    User.authenticate(email, password)
+Future另外一个十分强大的用法是组合.例如下面的Java代码:
+```java
+Future<User> authenticatedUser = User.authenticate(email, password)
  
-val lookupTweets: Future[Seq[Tweet]] =
-    authenticatedUser flatMap { user =>
-      Tweet.findAllByUser(user)
-    }
+Future<Seq<Tweet>> lookupTweets = authenticatedUser.flatMap(user -> Tweet.findAllByUser(user))
 
 //#1
 ```
-我解释下这段代码的执行逻辑. 首先调用`User.authenticate(email, password)`方法, 将返回的Future对象赋给authenticatedUser变量.
-然后调用authenticatedUser的flatMap方法, 传入一个回调函数. 代码执行到#1位置的时候, 其实Future对应的操作并没有执行. 记住我们之前说过的,
-Future是一个异步操作的抽象. 异步操作可能是由其他线程执行. flatMap的作用是可以对Future进行组合. 例如上面的代码, 只有在`User.authenticate(email, password)`的Future操作成功完成时, `Tweet.findAllByUser(user)`这段代码才会得到执行.
-
-如果你了解函数式编程, 可以看出来Finagle中的Future近似于Monad(单子), 对单子感兴趣的可以参考[我之前的文章](http://skaka.me/blog/2015/12/19/functor-applicative-monad-scala-haskell/).
-
-其实你用callback的写法也能完成上面的代码逻辑.只是flatMap的用法更加自然, 写起来好像是同步代码, 实际上可以是异步执行的.
+这段代码首先根据email和password获取user对象, 然后获取user对应的所有微博. 我解释下这段代码的执行逻辑.
+首先调用`User.authenticate(email, password)`方法进行用户认证, 返回的对象是Future<User>.代表这是一个异步操作.
+我们拿到的是Future<User>, 这个时候我们还没有真正的拿到user对象, 你当然可以在这里通过调用Future的get()方法来直接获取user,
+不过不建议这样做.
+接下来flatMap方法就派上用场了. 在上面代码中, flatMap函数签名应该是这样的:
+```java
+//Java8中并没有这个函数, 这里只是用来解释概念.
+//Java8中CompletableFuture的thenCompose方法类似于flatMap
+Future<Seq<Tweet>> flatMap(Function<User, Future<Seq<Tweet>>) {
+  //...
+}
+```
+简单来说, flatMap的作用是将`Future<A>`转成`Future<B>`, 在这个例子里, 是将`Future<User>`转换成`Future<Seq<Tweet>>`.
+其实这个flatMap操作在Haskell中叫做绑定, 而Future可以近似看作Monad(单子). 对函数式编程中的Monad感兴趣的朋友可以参考[我之前的文章](http://skaka.me/blog/2015/12/19/functor-applicative-monad-scala-haskell/).
+回到我们上面的代码. 代码执行到`#1`位置的时候, 其实认证用户和获取微博这两个操作可能并没有真正执行.
+记住我们之前说过的, Future是一个异步操作的抽象.
 
 2. Service
 Service是Finagle中的核心概念. Service可以被理解为接收一个Request参数, 返回一个Future对象的函数.
