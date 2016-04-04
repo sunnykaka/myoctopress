@@ -61,9 +61,61 @@ Future是一个异步操作的抽象. 异步操作可能是由其他线程执行
 
 如果你了解函数式编程, 可以看出来Finagle中的Future近似于Monad(单子), 对单子感兴趣的可以参考[我之前的文章](http://skaka.me/blog/2015/12/19/functor-applicative-monad-scala-haskell/).
 
-其实你用callback的写法也能完成上面的代码逻辑.只是FlatMap的用法更加自然, 写起来好像是同步代码, 实际上可以是异步执行的.
+其实你用callback的写法也能完成上面的代码逻辑.只是flatMap的用法更加自然, 写起来好像是同步代码, 实际上可以是异步执行的.
 
 2. Service
+Service是Finagle中的核心概念. Service可以被理解为接收一个Request参数, 返回一个Future对象的函数.
+如果定义为Java的抽象类, 原型如下:
+```java
+//Service在Finagle中是用Scala代码定义的, 这里只是用来解释概念.
+public abstract class Service<Request, Response> {
+
+     public Future<Response> apply(Request r);
+
+}
+```
+如果用Spring MVC类比, Finagle的Service就类似于Controller的方法, 可以用来处理客户端的请求.
+例如要在Finagle中实现一个Echo服务器, 代码如下:
+```java
+public class Server extends Service<Request, Response> {
+
+    @Override
+    public Future<Response> apply(Request request) {
+        Response response = Response.apply(Version.Http11$.MODULE$, Status.Ok());
+        response.setContentString(request.getContentString());
+        return Future.value(response);
+    }
+
+    public static void main(String[] args) throws Exception {
+        Server service = new Server();
+
+        ListeningServer server = Http.server().
+                withLabel("echo-server").
+                serve(new InetSocketAddress(8081), service);
+
+        Await.result(server);
+    }
+}
+```
+注意Service的返回值是Future, 代表操作可以是异步完成的.
+
+3. Filter
+Finagle的Filter本质上与Servlet Filter是一样的, 用来完成AOP操作. 不过Filter在Finagle中有更具体的用法.
+如果定义为Java的抽象类, 原型如下:
+```java
+//Filter在Finagle中是用Scala代码定义的, 这里只是用来解释概念.
+public abstract class Filter<-ReqIn, +RepOut, +ReqOut, -RepIn> {
+
+     public Future<RepOut> apply(ReqIn request, Service<ReqOut, RepIn> service);
+
+}
+```
+对于ReqIn, RepOut, ReqOut, RepIn这四个类型参数的定义, 可以参考下图.
+{% img /images/custom/20160404/finagle_filter.png %}
+
+
+
+
 
 
 在介绍Finagle的相关概念之前
