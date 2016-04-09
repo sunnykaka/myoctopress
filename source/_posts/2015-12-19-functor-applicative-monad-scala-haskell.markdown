@@ -3,7 +3,7 @@ layout: post
 title: "简单介绍函数式编程中的Functor(函子)，Applicative(加强版函子)，Monad(单子)"
 date: 2015-12-19 20:22:10 +0800
 comments: true
-categories: [函数式编程, Haskell]
+categories: [函数式编程]
 description: "简单介绍函数式编程中的Functor(函子)，Applicative(加强版函子)，Monad(单子)"
 ---
 
@@ -41,7 +41,7 @@ fmap :: (a -> b) -> [a] -> [b]
 1. 接受函数和函子值，返回在函子值上映射函数的结果（返回也是函子值）。
 2. 接受函数，把该函数从操作普通类型的函数**提升**(lift)为操作函子值的函数。
 这就是函子，不难吧？
-
+<!--more-->
 ### 2. Applicative
 Applicative，俗称加强版函子，先来看Applicative类型类的代码:
 ```haskell

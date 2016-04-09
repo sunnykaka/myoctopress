@@ -3,7 +3,7 @@ layout: post
 title: "使用StatsD, Graphite, Grafana, Kamon搭建可用于JVM项目的可视化性能监控系统"
 date: 2015-07-21 16:12:13 +0800
 comments: true
-categories: [StatsD, Graphite, Grafana, Kamon, Play Framework]
+categories: [Play Framework]
 description: "StatsD, Graphite, Grafana, Kamon的介绍"
 ---
 
@@ -19,7 +19,7 @@ description: "StatsD, Graphite, Grafana, Kamon的介绍"
 这里的Kamon只适用于基于JVM的项目，另外，如果你的项目是基于Play或Akka或Spray，可以做到不写代码实现监控。
 因为Kamon对这几个框架提供了AspectJ支持，在类加载的时候插入代码为你完成记录。
 其他情况你需要调用Kamon API来进行数据记录，这也非常的简单。
-
+<!-- more -->
 ### 2. 监控系统UI
 介绍搭建步骤之前，先来看一看搭好后的界面。
 {% img /images/custom/20150721/grafana1.png %}
@@ -30,8 +30,6 @@ description: "StatsD, Graphite, Grafana, Kamon的介绍"
 - Trace Metrics是业务请求的统计图表。例如每个请求的响应时间，以及某个时间段内各请求数量的统计对比。  
 - OS Metrics一看就知道是操作系统的统计图表了。  
 - JVM Metrics是JVM的统计图表。  
-
-<!-- more -->
 
 ### 3. StatsD, Graphite, Grafana, Kamon简介
 简单介绍一下这四个开源项目，因为都在Github上就不贴链接了，  

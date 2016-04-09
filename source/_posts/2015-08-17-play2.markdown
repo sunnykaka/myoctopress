@@ -3,7 +3,7 @@ layout: post
 title: "给Java开发者的Play Framework(2.4)介绍 Part2：使用Play，Spring，JPA进行开发"
 date: 2015-08-17 20:19:50 +0800
 comments: true
-categories: [Play Framework, Java, Scala]
+categories: [Play Framework]
 description: "对Java使用者介绍PlayFramework，Play的用法"
 ---
 
@@ -18,7 +18,7 @@ description: "对Java使用者介绍PlayFramework，Play的用法"
 ### 3. 代码实现
 #### 1. Model
 代码架构使用典型的MVC，分层为Controller-Service-Dao-Model。首先来看Model。
-
+<!-- more -->
 ```java
 //省略了部分字段
 @Table(name = "test_object")
@@ -177,7 +177,6 @@ public class GeneralDao {
 这里使用的是通用Dao，一般的增删改查操作可以直接通过该Dao完成。可以看出这个Dao只是对JPA的EntityManager一个简单封装，
 大部分操作还是委派给EntityManager完成。代码中也可以直接取得EntityManager进行操作。
 
-<!-- more -->
 
 #### 3. Service
 

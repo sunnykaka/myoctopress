@@ -3,7 +3,7 @@ layout: post
 title: "微服务框架Finagle介绍 Part1: Future, Service, Filter"
 date: 2016-03-19 21:33:12 +0800
 comments: true
-categories: [微服务, Scala, Java, 分布式, Finagle]
+categories: [微服务, Finagle]
 description: "微服务框架Finagle介绍 Part1: Future, Service, Filter"
 ---
 
@@ -28,6 +28,7 @@ description: "微服务框架Finagle介绍 Part1: Future, Service, Filter"
 例如Pinterest, Nest, Tumblr, 感兴趣的可以Google. Finagle有着较为丰富的生态圈, 例如可以使用[Finch](https://github.com/finagle/finch)很方便的实现REST, 使用[Finagle OAuth2](https://github.com/finagle/finagle-oauth2)实现OAuth认证, 使用[zipkin](http://twitter.github.io/zipkin/)实现服务监控. Finagle使用Scala开发, 官方宣称同时支持Scala和Java语言.
 
 学习Finagle的使用之前, 首先要了解Finagle中的三个核心概念: Future, Service, Filter.
+<!--more-->
 ###1. Future
 Finagle使用的Future是`com.twitter.util.Future`. 由于Future非常实用, 从Scala2.10开始被加入到官方库`scala.concureent.Future`. Java8中也引入了一个类似的接口`java.util.concurrent.CompletableFuture`.
 Future是对异步操作的抽象, 你可以将Future理解为一个容器, 这个容器包含一个异步操作. 一个Future容器可能处于三个状态中的一种: 异步操作还没有完成, 操作已经完成了并包含了成功结果, 操作失败并包含了异常结果. Future一种很常用的用法是可以注册成功或失败的回调函数, 例如下面的Java代码:

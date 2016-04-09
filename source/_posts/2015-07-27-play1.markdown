@@ -3,7 +3,7 @@ layout: post
 title: "给Java开发者的Play Framework(2.4)介绍 Part1：Play的优缺点以及适用场景"
 date: 2015-07-27 16:46:32 +0800
 comments: true
-categories: [Play Framework, Java, Scala]
+categories: [Play Framework]
 description: "对Java使用者介绍PlayFramework，Play的优缺点以及适用场景，学习Play的教程"
 ---
 
@@ -22,6 +22,7 @@ Play 2.x 使用Scala和Java开发，同时支持Java和Scala项目。
 这里主要介绍最新的Play2.4 for Java。有一点需要提前说明，虽然Play2主要由Scala开发，但是对于项目中的一般开发人员而言，
 使用Play可以完全不懂Scala，具体情况后面会说明。
 
+<!-- more -->
 ### 3. 为什么要了解Play
 现在的Web框架或者类库可以说是浩如烟海。近十年来，在Web开发领域，JVM阵营的占有率一直不高，
 {% img /images/custom/20150728/frameworks.png %}
@@ -44,7 +45,6 @@ Servlet还带来一个问题，就是有状态的服务器。一旦使用了Sess
 方案来解决这个问题，无论采取哪种方案都会有性能损耗，并且推高了技术成本。Servlet说到底是Java EE家族的一员，由于Sun的领导（Oracle背锅），
 从Java EE 5开始，Java EE的角色已经从技术创新者转换为跟随者，这些年基本上可以说是跟着开源社区的步子在走的，除了政府大单和跨国企业，你很难再看见它的身影了。
 
-<!-- more -->
 至于语言，其实从JDK8开始，Java已经很好用了。不过从JDK5到JDK8，十年太长，尤其是在Web。
 
 之前Java阵营受累于没有成熟的快速开发框架，Spring热衷于提供各种集成方案，可是配置和使用还是相当的麻烦，直到Spring Boot的出现才有改善。
