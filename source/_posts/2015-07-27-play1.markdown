@@ -42,9 +42,9 @@ Web容器存在的必要性也[被越来越多的人质疑](https://jaxenter.com
 虽然这种做法本意是好的，但是结果就是给开发测试部署带来一系列集成的问题，现在越来越多的项目开始使用内嵌的Jetty或Tomcat就是一个现实的例子。
 Servlet还带来一个问题，就是有状态的服务器。一旦使用了Session，服务器就无法享受到水平扩展的好处了，由此不得不采用Session复制或者粘性Session(Sticky Session)的
 方案来解决这个问题，无论采取哪种方案都会有性能损耗，并且推高了技术成本。Servlet说到底是Java EE家族的一员，由于Sun的领导（Oracle背锅），
-从Java EE 5开始，Java EE的角色已经从技术创新者转换为跟随者，这些年基本上可以说是跟着开源社区的步子在走的，除了政府大单和跨国企业，你很难再看见它的身影了。 
+从Java EE 5开始，Java EE的角色已经从技术创新者转换为跟随者，这些年基本上可以说是跟着开源社区的步子在走的，除了政府大单和跨国企业，你很难再看见它的身影了。
 
-<!-- more --> 
+<!-- more -->
 至于语言，其实从JDK8开始，Java已经很好用了。不过从JDK5到JDK8，十年太长，尤其是在Web。
 
 之前Java阵营受累于没有成熟的快速开发框架，Spring热衷于提供各种集成方案，可是配置和使用还是相当的麻烦，直到Spring Boot的出现才有改善。
@@ -64,6 +64,7 @@ Play2的模板是很强大并且容易上手的. 相对于Java领域其他模板
 一般都是通过sitemesh+filter或者在每个页面include来完成布局。使用Play模板, 完成这个功能非常容易。
 首先定义一个main页面
 main.scala.html：
+
 ```html
 @(title: String = "默认标题")(staticFile: Html = Html(""))(content: Html)
 
@@ -92,6 +93,7 @@ main.scala.html：
 ```
 @(title: String = "默认标题")(staticFile: Html = Html(""))(content: Html)
 ```
+
 这一部分是参数声明，这里声明了三个参数:title标题, 有默认值；staticFile为html代码块, 可以传js等；content为页面内容。
 
 ```
@@ -99,10 +101,12 @@ main.scala.html：
 
 @navigator() <!-- 导航 -->
 ```
+
 这一部分是引用同目录下的另外两个页面：header.scala.html和navigator.scala.html。为什么能这样引用，因为这些页面(main,header,navigator)都会被自动
 编译成一个方法（准确地说是一个Scala object，不过这里先当做方法），所以这里相当于方法调用。同样，这个main也会被编译成方法，其他页面可以调用main来完成布局，
 例如
 login.scala.html
+
 ```html
 @main() {
     <script type="text/javascript">
@@ -114,17 +118,20 @@ login.scala.html
     </div>
 }
 ```
+
 这就是一个简单的登录页面。登录页面调用main页面的方法，第一个参数不传使用默认标题，第二个参数传入登录页面的js代码，第三个参数传入登录页面的html代码。
 这样就完成了页面布局, 没有随处可见的include, 也没有暗箱操作的filter, 所有的一切都是方法调用, 是不是很简单清晰？  
 
 静态类型检查就不说了, 本来Java的一大优点(Que Dian)就是类型检查，所以在Java里用Freemarker或者Velocity这种模板的做法值得商榷。  
 
 反向路由的意思是, 在Play中, 所有的Controller url都配置在一个routes文件中, 例如
+
 ```
 GET         /register                           @controllers.user.LoginController.registerPage
 ```
-之后无论是在Controller里还是模板中, 都不用硬编码url。而是使用routes文件。例如在Controller中使用``` redirect(routes.LoginController.registerPage()) ```就能实现重定向。
-而在模板中使用 ``` <a href="@controllers.routes.LoginController.registerPage()"> ```来指向链接。这种风格就是REST里的URI模板。
+
+之后无论是在Controller里还是模板中, 都不用硬编码url。而是使用routes文件。例如在Controller中使用` redirect(routes.LoginController.registerPage()) `就能实现重定向。
+而在模板中使用 ` <a href="@controllers.routes.LoginController.registerPage()"> `来指向链接。这种风格就是REST里的URI模板。
 
 #### 2. 热部署
 这个上面介绍过，不用重启服务器。
@@ -151,12 +158,15 @@ RoR框架之所以好用，主要原因之一就是围绕RoR有相当丰富的�
 #### 7. 优秀的测试支持
 因为Play诞生的时候TDD已经很火热，所以Play对测试的支持非常好。
 例如下面的几行代码就能对Controller进行测试。
+
 ```Java
 Http.RequestBuilder request = new Http.RequestBuilder().method(POST).uri(routes.LoginController.requestPhoneCode(phone).url());
 Result result = route(request);
 assertThat(result.status(), is(OK));
 ```
+
 Play还内置了对 Selenium WebDriver的支持，可以模拟浏览器进行测试。以下是官方的例子：
+
 ```Java
 public class BrowserFunctionalTest extends WithBrowser {
 

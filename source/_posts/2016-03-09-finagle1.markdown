@@ -1,37 +1,37 @@
 ---
 layout: post
-title: "微服务框架Finagle介绍 - Part1, Future, Service, Filter"
+title: "微服务框架Finagle介绍 Part1: Future, Service, Filter"
 date: 2016-03-19 21:33:12 +0800
 comments: true
 categories: [微服务, Scala, Java, 分布式, Finagle]
-description: "微服务框架Finagle介绍 - Part1, Future, Service, Filter"
+description: "微服务框架Finagle介绍 Part1: Future, Service, Filter"
 ---
 
-微服务架构可能是时下最热的一种架构模式了. 这篇系列里, 我想介绍一些在常用的微服务框架. 通过学习这些框架,
+微服务架构可能是时下最热的一种架构模式了. 这篇系列里, 我想介绍一些常用的微服务框架. 通过学习这些框架,
 我们将会了解实现微服务的过程中会遇到哪些问题, 以及这些微服务框架是如何帮助我们解决这些问题的.
 所以这是一篇关于微服务实践的系列, 我不会讨论太多概念性的东西. 系列末尾我会给出一些微服务架构相关的链接, 感兴趣的可以参考.
 
-微服务不同于单一架构应用, 是典型的分布式场景, 各服务之间通过IPC进行通信. 实现微服务的过程中, 我们需要解决以下问题:
-1. 服务注册和服务发现.
-2. 根据应用选择合适的通信协议和数据协议.例如可以选用thrift, protocol buffer或REST.
-3. 服务负载均衡.一个服务一般会部署多个实例. 如何使客户端请求压力合理地分布到各个实例上是需要考虑的问题.
-4. 服务路由与限流.
-5. 容错处理.相对于单机应用, 分布式环境下错误发生的概率会大大提高, 服务宕机, 网络不可用的情况时常发生.
-6. 服务监控.各服务实例的性能指标, 例如请求响应时间, 请求并发数量, 以及服务实例的部署数量等.
-7. 事务一致性.
+微服务不同于单一架构应用, 是典型的分布式场景, 各服务之间通过IPC进行通信. 实现微服务的过程中, 我们需要解决以下问题:  
+1. **服务注册和服务发现.**  
+2. **根据应用选择合适的通信协议和数据协议.** 例如可以选用thrift, protocol buffer或REST.  
+3. **服务负载均衡.** 一个服务一般会部署多个实例. 如果使压力均匀分布是需要考虑的问题.  
+4. **服务路由与限流.**  
+5. **容错处理.** 相对于单机应用, 分布式环境下错误发生的概率会大大提高, 服务宕机, 网络不可用的情况时常发生.  
+6. **服务监控.** 各服务实例的性能指标, 例如请求响应时间, 请求并发数量, 以及服务实例的部署数量等.  
+7. **事务一致性.** 一般来说这个问题需要我们结合业务自己处理, 框架不会给我们太多帮助.
 
 好的微服务框架应该能帮助我们解决上面的全部或者大部分问题. 这里我选择JVM上比较热门的三个微服务框架: Finagle,
-  Spring Cloud(NetflixOSS), Dubbox. 我会从实例入手, 介绍这些框架的使用方式, 优缺点和适用场景.
+  Spring Cloud(NetflixOSS), Dubbox. 我会从实例入手, 介绍这些框架的使用方式, 特点和适用场景.
 
 首先来看Finagle.
 [Finagle](http://twitter.github.io/finagle)是Twitter在2011年开源的一款RPC框架, 在国外使用较多,
-例如Pinterest, Nest, Tumblr, 感兴趣的可以Google. Finagle有着较为丰富的生态圈, 可以使用[Finch](https://github.com/finagle/finch)方便的实现REST, 使用[Finagle OAuth2](https://github.com/finagle/finagle-oauth2)实现OAuth认证, 使用[zipkin](http://twitter.github.io/zipkin/)实现服务监控. Finagle使用Scala开发, 官方宣称同时支持Scala和Java语言.
+例如Pinterest, Nest, Tumblr, 感兴趣的可以Google. Finagle有着较为丰富的生态圈, 例如可以使用[Finch](https://github.com/finagle/finch)很方便的实现REST, 使用[Finagle OAuth2](https://github.com/finagle/finagle-oauth2)实现OAuth认证, 使用[zipkin](http://twitter.github.io/zipkin/)实现服务监控. Finagle使用Scala开发, 官方宣称同时支持Scala和Java语言.
 
 学习Finagle的使用之前, 首先要了解Finagle中的三个核心概念: Future, Service, Filter.
-1. Future
+###1. Future
 Finagle使用的Future是`com.twitter.util.Future`. 由于Future非常实用, 从Scala2.10开始被加入到官方库`scala.concureent.Future`. Java8中也引入了一个类似的接口`java.util.concurrent.CompletableFuture`.
 Future是对异步操作的抽象, 你可以将Future理解为一个容器, 这个容器包含一个异步操作. 一个Future容器可能处于三个状态中的一种: 异步操作还没有完成, 操作已经完成了并包含了成功结果, 操作失败并包含了异常结果. Future一种很常用的用法是可以注册成功或失败的回调函数, 例如下面的Java代码:
-```java
+```Java
 responseFuture.onSuccess(func(response -> {
     System.out.println(String.format("response status: %s, response string: %s",
             response.status().toString(), response.contentString()));
@@ -44,7 +44,7 @@ responseFuture.onFailure(func(e -> {
 ```
 我在`responseFuture`上注册了一个成功的回调函数和失败的回调函数, 当Future对应的操作完成时, 会简单的打印出结果或异常信息.
 Future另外一个十分强大的用法是组合.例如下面的Java代码:
-```java
+```Java
 Future<User> authenticatedUser = User.authenticate(email, password)
  
 Future<Seq<Tweet>> lookupTweets = authenticatedUser.flatMap(user -> Tweet.findAllByUser(user))
@@ -55,7 +55,7 @@ Future<Seq<Tweet>> lookupTweets = authenticatedUser.flatMap(user -> Tweet.findAl
 首先调用`User.authenticate(email, password)`方法进行用户认证, 返回的对象是Future<User>, 代表这是一个异步操作.
 注意我们拿到的是Future<User>, 这个时候我们还没有真正的拿到user对象.
 接下来flatMap方法就派上用场了. 在上面代码中, flatMap函数签名应该是这样的:
-```java
+```Java
 //Java8中并没有这个函数, 这里只是用来解释概念.
 //Java8中CompletableFuture的thenCompose方法类似于flatMap
 Future<Seq<Tweet>> flatMap(Function<User, Future<Seq<Tweet>>) {
@@ -63,20 +63,19 @@ Future<Seq<Tweet>> flatMap(Function<User, Future<Seq<Tweet>>) {
 }
 ```
 简单来说, flatMap的作用是将`Future<A>`转换成`Future<B>`, 在这个例子里, 是将`Future<User>`转换成`Future<Seq<Tweet>>`.
-通过flatMap这种方式, 我们的代码写起来完全没有callback, 而很像是同步执行的. 但是实际上Future中的操作是由一个叫做Scheduler的组件去执行的,
+通过flatMap这种方式, 我们的代码写起来很像是同步执行的, 但是实际上Future中的操作是由一个叫做Scheduler的组件去执行的,
 你可以将Scheduler理解为一个ExecutorService, 即我们的代码是由其他线程异步执行的. 上面的代码中, 当代码执行到`#1`位置的时候, 其实认证用户和获取微博这两个操作可能并没有真正被执行.
 
 Future与flatMap的概念都来源于函数式编程. 在Haskell中, flatMap叫做绑定(bind), 而Future可以近似看作Monad(单子). 对函数式编程中的Monad感兴趣的朋友可以参考[我之前的文章](http://skaka.me/blog/2015/12/19/functor-applicative-monad-scala-haskell/).
-回到我们上面的代码. 代码执行到`#1`位置的时候, 其实认证用户和获取微博这两个操作可能并没有真正执行.
 
-Future还有其他一些很有用的方法, 例如从异常中恢复的rescue方法, 连接多个Future的join方法等, 篇幅有限就不展开了.
-Future在Finagle中无处不在, 其实Finagle的设计哲理之一就是能异步的尽量异步, 大部分操作都不会阻塞.
-例如下面我们要说的Service和Filter, 返回的结果都是Future. 如果你之前主要是使用Spring或者Servlet这种一个请求一个线程的框架, 可能刚学习Finagle的时候觉得有些难以理解. 这很正常, 在后面的文章我会详细介绍如何使用Future编程, 你会发现其实这种异步编程习惯与之前相比没有太大的不同.只是ThreadLocal在这种环境下失效了, 不过好在我们有替代品 ：）
+Future还有其他一些很有用的方法, 例如从异常中恢复的rescue方法, 连接多个Future的join方法等, 这里就不展开了.
+Future在Finagle中无处不在, Finagle的设计哲理之一就是能异步的尽量异步, 大部分操作都不会阻塞.
+例如下面我们要说的Service和Filter, 返回的结果都是Future. 如果你之前主要使用Spring或者Servlet这种技术, 可能刚学习Finagle的时候觉得有些难以理解. 这很正常, 在后面的文章我会详细介绍如何使用Future编程, 你会发现其实这种异步编程习惯与之前相比没有太大的不同.只是ThreadLocal在这种环境下失效了, 不过好在我们有替代品 ：）
 
-2. Service
+###2. Service
 Service是Finagle中的核心概念. Service可以被理解为接收一个Request参数, 返回一个Future对象的函数.
 如果定义为Java的抽象类, 原型如下:
-```java
+```Java
 //Service在Finagle中是用Scala代码定义的, 这里只是用来解释概念.
 public abstract class Service<Request, Response> {
 
@@ -86,7 +85,7 @@ public abstract class Service<Request, Response> {
 ```
 如果用Spring MVC类比, Finagle的Service就类似于Controller的方法, 可以用来处理客户端的请求.
 例如要在Finagle中实现一个Echo服务器, 代码如下:
-```java
+```Java
 public class Server extends Service<Request, Response> {
 
     @Override
@@ -109,10 +108,10 @@ public class Server extends Service<Request, Response> {
 ```
 注意Service的返回值是Future, 代表操作可以是异步完成的.
 
-3. Filter
+###3. Filter
 Finagle Filter类似于Servlet Filter, 可以对Service的请求和响应进行过滤. 不过Finagle Filter使用类型参数明确定义了
 输入输出的参数类型, Finagle Filter如果定义为Java的抽象类, 原型如下:
-```java
+```Java
 //Filter在Finagle中是用Scala代码定义的, 这里只是用来解释概念.
 public abstract class Filter<ReqIn, RepOut, ReqOut, RepIn> {
 
@@ -122,9 +121,10 @@ public abstract class Filter<ReqIn, RepOut, ReqOut, RepIn> {
 ```
 对于ReqIn, RepOut, ReqOut, RepIn这四个类型参数的定义, 可以参考下图.
 {% img /images/custom/20160404/finagle_filter.png %}
-可以看出, ReqIn和ReqOut分别是Filter的入参和出参, 而RepIn和RepOut则是Service的入参和出参.
+
+ReqIn和ReqOut分别是Filter的入参和出参, 而RepIn和RepOut则是Service的入参和出参.
 我们来看看Filter在代码中的实际用法:
-```scala
+```Scala
 val baseService = new Service[HttpRequest, HttpResponse] {
   def apply(request: HttpRequest) =
     Future(new DefaultHttpResponse(HTTP_1_1, OK))
@@ -141,8 +141,4 @@ val decoratedService: Service[HttpRequest, HttpResponse] =
 这有点类似于在web.xml中定义了一个Servlet, 以及两个Filter来拦截针对Servlet的请求.
 不过毫无疑问Finagle这种使用方式更加直观, 并且不容易出错.
 
-
-
-
-在介绍Finagle的相关概念之前
-我分别使用Java和Scala实现一个echo的示例.
+现在我们已经了解了Finagle的基本概念, 下一篇我将结合实例介绍如何使用Finagle进行开发.
