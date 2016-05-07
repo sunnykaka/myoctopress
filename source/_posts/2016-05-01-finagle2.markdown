@@ -9,8 +9,8 @@ description: "微服务框架Finagle介绍 Part2: 在Finagle中开发基于Http�
 
 在[上篇文章](http://skaka.me/blog/2016/03/19/finagle1/)中我介绍了Finagle中的Future/Service/Filter.
 这篇文章里, 我们将构建一个基于Http协议的echo服务端和客户端, 下篇文章将构建一个基于thrift协议的客户端和服务端.
-这两篇文章对应的源代码地址在[Github](https://github.com/sunnykaka/java-finagle-example)上.
-代码中有Java和Scala版本两套版本的实现, 但是这里我们只会介绍Java版本.  
+这两篇文章对应的源代码地址在[Github](https://github.com/sunnykaka/java-finagle-example).
+代码中有Java和Scala版本两套版本的实现, 但是这里我只会介绍Java版本.  
 
 首先来看echo应用的Server端代码, 打开`java-finagle-example/src/main/java/com/akkafun/finagle/Server.java`:
 ```Java
