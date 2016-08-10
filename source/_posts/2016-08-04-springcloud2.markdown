@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "微服务框架Spring Cloud介绍 Part2: Spring Cloud与微服务"
-date: 2016-08-03 10:09:25 +0800
+date: 2016-08-03 22:09:25 +0800
 comments: true
 categories: [微服务, Spring Cloud]
 description: "微服务框架Spring Cloud介绍 Part2: Spring Cloud与微服务"
@@ -44,9 +44,11 @@ Spring Cloud是伴随着微服务的概念诞生的. 毫无疑问, 微服务真�
 **订单服务(order service)**
 服务拆的比较随意, 真实场景中得根据实际业务来划分.
 下面是mysteam的架构示意图
-[图片]
+{% img /images/custom/20160804/mysteam_arch.png %}
 我们的关注点主要在Backend Services和MQ, MySQL这一部分. 服务之间通过Rest API和事件进行通信. Rest API主要用来进行一些只读等不需要事务的操作,
 涉及事务的操作一般使用事件来完成. 具体怎么做后面有专门的博客来介绍.
+
+<!-- more -->
 
 首先, 让我们来个Hello World, 先介绍如何将mysteam下载下来并启动.
 一旦涉及微服务, 项目结构和环境都会比较复杂, 我已经尽量简化了, 请系好安全带: )
@@ -102,4 +104,4 @@ mysql -uroot -proot < docs/init_database.sql
 这个测试的运行时间稍长, 在我机器上需要3分钟左右. 如果测试全部通过, 代表环境OK了.
 如果运行报错, 则检查下前面的步骤看看问题出在哪儿. 特别关注下kafka和zookeeper的服务是不是启动了, 并且ip是否正确.
 
-下一篇我会介绍下mysteam的maven项目结构, 以及实现用户注册功能.
+下一篇我会介绍mysteam的maven项目结构, 以及实现用户注册功能.
