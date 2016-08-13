@@ -10,6 +10,7 @@ description: "微服务框架Spring Cloud介绍 Part3: mysteam项目结构与开
 在[上一篇文章](http://skaka.me/blog/2016/08/04/springcloud2/)中我们简单的了解了一下Spring Cloud.
 因为Spring Cloud相关的内容较多, 所以我建了一个项目mysteam来演示Spring Cloud的使用, [GitHub地址](https://github.com/sunnykaka/mysteam).
 
+####1. 项目结构
 这是一个Maven项目, 下载下来之后直接导入IDE, 你会看到如下的项目结构(我用的是Intellij IDEA):
 {% img /images/custom/20160810/mysteam_structure.png %}
 
@@ -48,8 +49,11 @@ web: 存放Spring MVC Controller.
 mysteam把所有的服务都放到一个项目中只是为了方便演示和运行. 如果你想将mysteam的模块都拆到独立项目中去也是相当的简单, 只要修改pom文件即可.  
 
 好了, 项目结构介绍完, 接下来我们要做点正事了: ) 实现用户注册服务.
+
+####2. 实现Model
 用户表的结构相当简单, 只有三个字段. sql文件在`$YOUR_PATH/mysteam/user/docs/user-service.sql`. 我们首先创建实体类.
 文件位置在`$YOUR_PATH/mysteam/user/core/src/main/java/com/akkafun/user/domain/User.java`.
+<!-- more -->
 ```java
 @Entity
 @Table(name = "user")
@@ -94,10 +98,11 @@ public class User extends VersionEntity {
 ```
 实体类很简单, 使用的是JPA注解, 继承抽象基类VersionEntity来获得乐观锁控制功能.  
 
+####3. 实现DAO
 DAO层使用的是[Spring Data JPA](http://docs.spring.io/spring-data/data-jpa/docs/current/reference/html/),  
-目录在`$YOUR_PATH/mysteam/user/core/src/main/java/com/akkafun/user/dao`, DAO相对简单也不是重点, 这里就不介绍了.  
-如果不喜欢JPA, 可以很容易地替换成MyBatis.
+目录在`$YOUR_PATH/mysteam/user/core/src/main/java/com/akkafun/user/dao`, DAO相对简单也不是重点, 这里就不介绍了.
 
+####4. 实现Service
 Service类是`$YOUR_PATH/mysteam/user/core/src/main/java/com/akkafun/user/service/UserService.java`, 我们看一下用户注册的业务逻辑:
 ```java
 @Transactional
@@ -130,13 +135,14 @@ public boolean isUsernameExist(String username, Optional<Integer> userId) {
 }
 
 ```
-1. 注册之前首先判断用户名是否存在, 判断逻辑在UserRepositoryImpl类里. 如果用户名重复就抛出异常.  
-2. 调用DAO的save方法持久化用户到数据库.  
-3. 发送用户创建事件.  
+1.注册之前首先判断用户名是否存在, 判断逻辑在UserRepositoryImpl类里. 如果用户名重复就抛出异常.  
+2.调用DAO的save方法持久化用户到数据库.  
+3.发送用户创建事件.  
 
 注意register方法上有`@Transactional`注解, 代表事务边界是在service层. register方法构成一个事务, 包括事件发送.
-关于事件处理后续有专门的文章描述, 这里先略过.
+关于事件处理后续有专门的文章介绍, 这里先略过.
 
+####5. 实现Controller
 现在来看下Controller层的处理. 打开`$YOUR_PATH/mysteam/user/core/src/main/java/com/akkafun/user/web/UserController.java`:
 ```java
 @RestController
@@ -160,14 +166,15 @@ public class UserController {
 
 }
 ```
-这就是一个很普通的Spring MVC Controller, 有几个地方需要注意一下.
-1. 我们的Rest服务暂且只提供json数据的请求和响应, 所以在class级别加了一个注解`@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)`.
+这就是一个很普通的Spring MVC Controller.  
+1. 我们的Rest服务暂且只提供json数据的请求和响应, 所以在class级别加了一个注解`@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)`.  
 2. 注册是POST请求, 我们使用DTO对象RegisterDto来收集数据. 注意RegisterDto是user服务的api模块提供的, 意味着其他依赖了user服务的模块可以直接使用RegisterDto.
-RequestBody类使用了[Java Validation](http://docs.spring.io/spring/docs/current/spring-framework-reference/html/validation.html)注解来校验参数的合法性.
-3. 调用UserService的register方法完成注册, 然后将User实体对象转化成UserDto对象返回.
+RequestBody类使用了[Java Validation](http://docs.spring.io/spring/docs/current/spring-framework-reference/html/validation.html)注解来校验参数的合法性.  
+3. 调用UserService的register方法完成注册, 然后将User实体对象转化成UserDto对象返回.  
 
-到此就开发完了. 现在我们可以启动user服务来看一下效果.
-**提示: 运行下面的UserApplication之前, 需要先启动Eureka服务和Config服务, 启动方法请参考[上一篇文章](http://skaka.me/blog/2016/08/04/springcloud2/).**
+####6. 运行
+到此就开发完了. 现在我们可以启动user服务来看一下效果(user服务运行在23101端口).  
+(**提示: 运行下面的UserApplication之前, 需要先启动Eureka服务和Config服务, 启动方法请参考[上一篇文章](http://skaka.me/blog/2016/08/04/springcloud2/).**)  
 打开`$YOUR_PATH/mysteam/user/core/src/main/java/com/akkafun/context/web/UserApplication.java`, 直接运行main方法.
 项目启动之后, 在浏览器访问http://localhost:23101/swagger-ui.html, 你应该能看见如下的页面:
 {% img /images/custom/20160810/user_swagger_ui.png %}
@@ -183,7 +190,8 @@ RequestBody类使用了[Java Validation](http://docs.spring.io/spring/docs/curre
 ```
 然后点击下面的Try it out!按钮, 你就能看见服务器的返回结果了.  
 
-大功告成. 整个过程除去实体类的话, 真正的业务代码只有几十行. 代码量虽少, 但是我们已经开发了一个完整的注册服务, 用户注册服务不但自动生成了完整的API文档,
-同时已经能通过Eureka被其他服务调用了(下一篇文章演示). 当然, 这一切都仰仗于Spring Cloud, Netflix OSS, SpringFox, Swagger等一系列开源软件的帮助, 程序员的生产力也因此越来越高.  
-看看上面的步骤, 你也许会觉得, 开发一个微服务也是相当简单的嘛. 事实上, 我们还没有接触到真正的难点, 因为服务之间还没有交互.
+大功告成. 整个过程除去实体类的话, 真正的业务代码只有几十行. 代码量虽少, 但是我们已经开发了一个完整的注册服务,
+服务不但自动生成了完整的API文档, 同时已经能通过Eureka被其他服务调用了(下一篇文章演示).
+当然, 这一切都仰仗于Spring Cloud, Netflix OSS, SpringFox, Swagger等一系列开源软件的帮助, 程序员的生产力也因此越来越高.
+看着上面的步骤, 你也许会觉得, 开发一个微服务也是相当简单的嘛. 事实上, 我们还没有接触到真正的难点, 因为服务之间还没有交互.
 下篇文章我会通过下单服务, 介绍如何进行服务之间的相互调用以及如何处理事件来保证事务完整性.
