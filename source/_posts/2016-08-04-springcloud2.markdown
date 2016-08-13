@@ -29,9 +29,10 @@ Spring Cloud是伴随着微服务的概念诞生的. 毫无疑问, 微服务真�
 之后的博客主要会涉及下面这些技术:  
 **使用eureka和Netflix Ribbon进行服务注册和服务发现**  
 **使用Spring Cloud Stream, zookeeper和kafka实现分布式事务**  
-**使用hystrix实现服务隔离, hystrix dashboard和turbine进行服务监控**  
+**使用hystrix实现服务隔离, 并且用hystrix dashboard和turbine监控hystrix服务**  
 **使用Spring MVC和Swagger实现REST API**  
 **使用Spring Cloud Config实现配置集中管理**  
+**使用Spring Cloud Sleuth与Zipkin实现服务监控**  
 ...  
 
 内容比较多, 我会分成多篇博客. 我不想泛泛地谈概念, 这样有点无趣, 对实际工作也起不到什么帮助.
