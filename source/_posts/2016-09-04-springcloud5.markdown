@@ -24,7 +24,7 @@ description: "微服务框架Spring Cloud介绍 Part5: 在微服务系统中使�
 **1.断路器机制**  
 断路器很好理解, 当Hystrix Command请求后端服务失败数量超过一定比例(默认50%), 断路器会切换到开路状态(Open). 这时所有请求会直接失败而不会发送到后端服务.
 断路器保持在开路状态一段时间后(默认5秒), 自动切换到半开路状态(HALF-OPEN). 这时会判断下一次请求的返回情况, 如果请求成功, 断路器切回闭路状态(CLOSED), 否则重新切换到开路状态(OPEN).
-Hystrix的断路器就像我们家庭电路中的保险丝, 一旦后端服务不可用, 断路器会直接切断请求链, 避免发送大量无效请求影响系统吞吐量, 并且断路器有自我检测并恢复的能力.
+Hystrix的断路器就像我们家庭电路中的保险丝, 一旦后端服务不可用, 断路器会直接切断请求链, 避免发送大量无效请求影响系统吞吐量, 并且断路器有自我检测并恢复的能力.  
 **2.Fallback**  
 Fallback相当于是降级操作. 对于查询操作, 我们可以实现一个fallback方法, 当请求后端服务出现异常的时候, 可以使用fallback方法返回的值. fallback方法的返回值一般是设置的默认值或者来自缓存.  
 **3.资源隔离**  
@@ -58,10 +58,12 @@ public class CommandHelloFailure extends HystrixCommand<String> {
 ```
 编写一个Hystrix Command, 需要继承`HystrixCommand`类, 在`run`方法中完成你的业务逻辑. 你可以重写`getFallback`方法来在run方法抛出异常的时候返回备用的结果.
 
+<!--more-->
+
 ####2. Hystrix javanica介绍
 
 上面的代码写起来有点繁琐, 好在有[javanica](https://github.com/Netflix/Hystrix/tree/master/hystrix-contrib/hystrix-javanica). 这是Hystrix开源社区贡献的一个类库.
-使用javanica, 你不需要继承`HystrixCommand`, 只需要上加上`@HystrixCommand`注解, 你的方法就能够通过Hystrix运行. 例如下面的代码:
+使用javanica, 你不需要继承`HystrixCommand`, 只要在方法上添加`@HystrixCommand`注解, 你的方法就能够通过Hystrix运行. 例如下面的代码:
 ```java
 @HystrixCommand(groupKey="ExampleGroup", commandKey = "HelloWorld",
          threadPoolKey="HelloWorldPool", fallbackMethod = "defaultHello")
@@ -110,16 +112,16 @@ javanica使用AOP来完成普通方法到Hystrix Command的转换, 所以我们�
 所以在这里配置了ignoreExceptions参数(如果想了解mysteam的http请求和异常处理逻辑, 可以查看`CustomRestTemplate`类和`RestTemplateErrorHandler`类的代码).
 
 ####4. 在Spring Cloud中使用Hystrix Dashboard和Turbine
-在生产环境中一般你需要对Hystrix Command的groupKey和线程池大小等参数进行调整, 而且针对生产环境, Netflix还给我们准备了一个非常好用的运维工具,
+针对生产环境, Netflix还给我们准备了一个非常好用的运维工具,
 那就是[Hystrix Dashboard](https://github.com/Netflix/Hystrix/tree/master/hystrix-dashboard)和[Turbine](https://github.com/Netflix/Turbine).  
 先上一张图有个直观感受, 来自Turbine的GitHub
 {% img https://github.com/Netflix/Turbine/wiki/images/NetflixDash.jpg %}
-通过Hystrix Dashboard我们可以在直观地看到各Hystrix Command的请求响应时间, 以及请求成功率等数据. 但是只使用Hystrix Dashboard的话, 你只能看到单个应用内的服务信息, 这明显不够.
+通过Hystrix Dashboard我们可以在直观地看到各Hystrix Command的请求响应时间, 请求成功率等数据. 但是只使用Hystrix Dashboard的话, 你只能看到单个应用内的服务信息, 这明显不够.
 我们需要一个工具能让我们汇总系统内多个服务的数据并显示到Hystrix Dashboard上, 这个工具就是Turbine.  
 
 我在mysteam中已经加了一个turbine模块, 模块名称是`turbine`, 接下来, 让我们启动turbine服务.
 #####1. 首先启动EurekaApplication和ConfigApplication
-关于为什么要先启动这两个服务, 可以参看我[之前的文章](http://skaka.me/blog/2016/08/03/springcloud2/).
+关于mysteam中为什么要先启动这两个服务, 可以参看我[之前的文章](http://skaka.me/blog/2016/08/03/springcloud2/).
 #####2. 启动turbine模块下的TurbineApplication
 启动完成之后, 打开链接[http://localhost:7777/hystrix](http://localhost:7777/hystrix), 你应该能看见可爱的豪猪logo. 在页面中部的输入框输入你要监控的turbine流地址, 例如输入
 `http://localhost:7777/turbine.stream?cluster=ORDER`, 代表我们要监控ORDER服务下所有实例的Hystrix. 输入完成点击`Monitor Stream`按钮, 你就能进入监控UI了. 但是这时应该还没有显示图表,
