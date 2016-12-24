@@ -51,7 +51,9 @@ Binder是SCS设计的一层MQ的抽象, 对不同的MQ有不同的实现. 例如
 Input是消息的输入通道, 我们的应用从Input读取消息, Output相反. 关于Input和Output我们可以在之后的代码中看见实际例子.
 
 ####1. 在项目中使用Spring Cloud Stream
-
+#####1. 配置Spring Cloud Stream
+在mysteam中, 对SCS的配置分为两部分, 一部分是总的配置, 所有服务都会用到, 另一部分是每个服务各自的配置. 总配置文件的位置在mysteam项目中的config模块下,
+具体位置是`$YOUR_PATH/mysteam/config/src/main/java/com/akkafun/common/spring/BaseConfiguration.java`
 
 我们来看一个Spring Cloud Stream在代码中实际使用的例子:
 ```java
