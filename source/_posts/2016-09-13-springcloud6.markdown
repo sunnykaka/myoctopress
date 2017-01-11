@@ -44,7 +44,7 @@ Kafka的客户端类库会根据我们设置的分区规则, 从消息中取出i
 Spring Cloud Stream(SCS)依赖于[Spring Integration](https://projects.spring.io/spring-integration/)这个库,
 Spring Integration是对企业集成模式(Enterprise Integration Patterns)的实现与扩展(如果不知道什么是企业集成模式, 可以看看[这本书](https://book.douban.com/subject/1766652/)),
 SCS直接使用了SI的组件来连接特定的MQ, 例如RabbitMQ, Kafka, 所以你在配置SCS的时候会发现很多SI的组件能够直接使用. SCS在SI的基础上, 对MQ的分布式特性做出了进一步的支持, 例如消费者分组和分区.
-SCS应用结构如下如图.
+SCS架构如下如图.
 {% img /images/custom/20161224/scs.png %}
 
 Binder是SCS设计的一层MQ的抽象, 对不同的MQ有不同的实现. 例如连接Kafka的就叫Kafka Binder, 目前官方实现了的Binder有Kafka, Rabbit MQ和Redis.  
@@ -53,7 +53,50 @@ Input是消息的输入通道, 我们的应用从Input读取消息, Output相反
 ####1. 在项目中使用Spring Cloud Stream
 #####1. 配置Spring Cloud Stream
 在mysteam中, 对SCS的配置分为两部分, 一部分是总的配置, 所有服务都会用到, 另一部分是每个服务各自的配置. 总配置文件的位置在mysteam项目中的config模块下,
-具体位置是`$YOUR_PATH/mysteam/config/src/main/java/com/akkafun/common/spring/BaseConfiguration.java`
+具体位置是`$YOUR_PATH/mysteam/config/src/main/resources/application.yml`, stream标签下的就是有关的配置:
+```
+stream:
+  instanceCount: 1  #部署的实例数量
+  instanceIndex: 0  #当前实例的编号
+  kafka:
+    binder:
+      brokers: 192.168.239.129:9092,192.168.239.129:9093,192.168.239.129:9094 #kafka 路径
+      zkNodes: 192.168.239.129:2181                                           #zookeeper 路径
+      offsetUpdateTimeWindow: 10000                                           #kafka offset保存时间间隔
+      requiredAcks: 1                                                         #只有接收到不少于这个数量的broker的ack才认为保存成功
+      minPartitionCount: 1                                                    #最小分区数量
+      replicationFactor: 1                                                    #topic复制参数, 1为不复制
+
+```
+
+kafka和zookeeper路径在mysteam-config-repo项目的applicaiton.yml文件里也有定义, 文件位置是`$YOUR_PATH/mysteam-config-repo/application.yml`:
+```
+cloud:
+  stream:
+    kafka:
+      binder:
+        brokers: 192.168.239.129:9092,192.168.239.129:9093,192.168.239.129:9094
+        zkNodes: 192.168.239.129:2181
+```
+在这里定义是因为项目在启动的时候就需要连接kafka和zookeeper, 后期会考虑简化这个配置.
+
+然后我们来看单个服务的配置, 以account服务为例, account服务的配置文件在mysteam-config-repo项目里, 文件位置是`$YOUR_PATH/mysteam-config-repo/account.yml`:
+```
+bindings:
+  input:                    #input配置
+    group: account          #consumer group 名字
+    consumer:
+      concurrency: 1        #consumer并发数量
+      partitioned: false    #是否是从已分区的producer接受数据
+      headerMode: raw       #消息头类型, 这里不使用消息头
+  output: #output配置
+    group: account
+    producer:
+      partitionCount: 1
+      headerMode: raw
+```
+
+#####1. 配置Spring Cloud Stream
 
 我们来看一个Spring Cloud Stream在代码中实际使用的例子:
 ```java
